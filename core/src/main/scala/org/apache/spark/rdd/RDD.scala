@@ -945,6 +945,17 @@ abstract class RDD[T: ClassManifest](
   /** Record user function generating this RDD. */
   private[spark] val origin = Utils.formatSparkCallSite
 
+  /**
+   * Record the user function causing the generation of this RDD when its lifecycle is managed 
+   * by an extension (spark-streaming)
+   */
+  var contextOrigin: Option[String] = deps.headOption.flatMap(_.rdd.contextOrigin)
+  
+  /** Set contextOrigin */
+  def setContextOrigin(_contextOrigin: String) {
+    contextOrigin = Some(_contextOrigin)
+  }
+  
   private[spark] def elementClassManifest: ClassManifest[T] = classManifest[T]
 
   private[spark] var checkpointData: Option[RDDCheckpointData[T]] = None
@@ -1009,7 +1020,7 @@ abstract class RDD[T: ClassManifest](
     Option(name).map(_ + " ").getOrElse(""),
     getClass.getSimpleName,
     id,
-    origin)
+    contextOrigin.getOrElse(origin))
 
   def toJavaRDD() : JavaRDD[T] = {
     new JavaRDD(this)(elementClassManifest)

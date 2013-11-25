@@ -19,6 +19,7 @@ package org.apache.spark.streaming.dstream
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.{Duration, DStream, Job, Time}
+import org.apache.spark.util.Utils
 
 private[streaming]
 class ForEachDStream[T: ClassManifest] (
@@ -35,6 +36,7 @@ class ForEachDStream[T: ClassManifest] (
   override def generateJob(time: Time): Option[Job] = {
     parent.getOrCompute(time) match {
       case Some(rdd) =>
+        rdd.setContextOrigin(origin)
         val jobFunc = () => {
           foreachFunc(rdd, time)
         }

@@ -202,7 +202,7 @@ class DAGScheduler(
     shuffleToMapStage.get(shuffleDep.shuffleId) match {
       case Some(stage) => stage
       case None =>
-        val stage = newStage(shuffleDep.rdd, shuffleDep.rdd.partitions.size, Some(shuffleDep), jobId)
+        val stage = newStage(shuffleDep.rdd, shuffleDep.rdd.partitions.size, Some(shuffleDep), jobId, shuffleDep.rdd.contextOrigin)
         shuffleToMapStage(shuffleDep.shuffleId) = stage
         stage
     }
@@ -224,7 +224,7 @@ class DAGScheduler(
     if (shuffleDep != None) {
       // Kind of ugly: need to register RDDs with the cache and map output tracker here
       // since we can't do it in the RDD constructor because # of partitions is unknown
-      logInfo("Registering RDD " + rdd.id + " (" + rdd.origin + ")")
+      logInfo("Registering RDD " + rdd.id + " (" + rdd.contextOrigin.getOrElse(rdd.origin) + ")")
       mapOutputTracker.registerShuffle(shuffleDep.get.shuffleId, rdd.partitions.size)
     }
     val id = nextStageId.getAndIncrement()

@@ -34,6 +34,7 @@ import java.io.{ObjectInputStream, IOException, ObjectOutputStream}
 
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.conf.Configuration
+import org.apache.spark.util.Utils
 
 /**
  * A Discretized Stream (DStream), the basic abstraction in Spark Streaming, is a continuous
@@ -74,6 +75,9 @@ abstract class DStream[T: ClassManifest] (
 
   /** Method that generates a RDD for the given time */
   def compute (validTime: Time): Option[RDD[T]]
+  
+  /** Record user function generating this DStream */
+  val origin = Utils.formatSparkCallSite
 
   // =======================================================================
   // Methods and fields available on all DStreams
@@ -299,6 +303,7 @@ abstract class DStream[T: ClassManifest] (
                 logInfo("Marking RDD " + newRDD.id + " for time " + time + " for checkpointing at time " + time)
               }
               generatedRDDs.put(time, newRDD)
+              newRDD.setContextOrigin(origin)
               Some(newRDD)
             case None => 
               None

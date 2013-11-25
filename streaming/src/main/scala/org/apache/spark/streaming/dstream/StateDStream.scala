@@ -62,6 +62,7 @@ class StateDStream[K: ClassManifest, V: ClassManifest, S: ClassManifest](
             }
             val cogroupedRDD = parentRDD.cogroup(prevStateRDD, partitioner)
             val stateRDD = cogroupedRDD.mapPartitions(finalFunc, preservePartitioning)
+            stateRDD.setContextOrigin(origin)
             //logDebug("Generating state RDD for time " + validTime)
             return Some(stateRDD)
           }
@@ -74,6 +75,7 @@ class StateDStream[K: ClassManifest, V: ClassManifest, S: ClassManifest](
               updateFuncLocal(i)
             }
             val stateRDD = prevStateRDD.mapPartitions(finalFunc, preservePartitioning)
+            stateRDD.setContextOrigin(origin)
             return Some(stateRDD)
           }
         }
@@ -95,6 +97,7 @@ class StateDStream[K: ClassManifest, V: ClassManifest, S: ClassManifest](
 
             val groupedRDD = parentRDD.groupByKey(partitioner)
             val sessionRDD = groupedRDD.mapPartitions(finalFunc, preservePartitioning)
+            sessionRDD.setContextOrigin(origin)
             //logDebug("Generating state RDD for time " + validTime + " (first)")
             return Some(sessionRDD)
           }

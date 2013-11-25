@@ -638,7 +638,14 @@ private[spark] object Utils extends Logging {
    * A regular expression to match classes of the "core" Spark API that we want to skip when
    * finding the call site of a method.
    */
-  private val SPARK_CLASS_REGEX = """^org\.apache\.spark(\.api\.java)?(\.util)?(\.rdd)?\.[A-Z]""".r
+  val SPARK_CLASS_REGEX = ("""(^org\.apache\.spark(\.api\.java)?(\.util)?(\.rdd)?\.[A-Z])|""" +
+    """(^org\.apache\.spark(\.util)?(\.streaming\.dstream)?(\.streaming)?\.[A-Z])(?!etworkInputTracker)""").r
+  
+  /**
+   * A regular expression to match Scala classes that we want to excluded when finding the
+   * call site of a method
+   */
+  private val SCALA_CLASS_REGEX = """^scala\.[\S+]""".r
 
   private[spark] class CallSiteInfo(val lastSparkMethod: String, val firstUserFile: String,
                                     val firstUserLine: Int, val firstUserClass: String)
@@ -672,7 +679,8 @@ private[spark] object Utils extends Logging {
             el.getMethodName
           }
         }
-        else {
+        // skip any containers such as Option and TraversableLike
+        else if (SCALA_CLASS_REGEX.findFirstIn(el.getClassName).isEmpty) {
           firstUserLine = el.getLineNumber
           firstUserFile = el.getFileName
           firstUserClass = el.getClassName

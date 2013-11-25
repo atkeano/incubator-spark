@@ -117,6 +117,7 @@ class ReducedWindowedDStream[K: ClassManifest, V: ClassManifest](
     // Get the RDD of the reduced value of the previous window
     val previousWindowRDD =
       getOrCompute(previousWindow.endTime).getOrElse(ssc.sc.makeRDD(Seq[(K,V)]()))
+    previousWindowRDD.setContextOrigin(origin)
 
     // Make the list of RDDs that needs to cogrouped together for reducing their reduced values
     val allRDDs = new ArrayBuffer[RDD[(K, V)]]() += previousWindowRDD ++= oldRDDs ++= newRDDs
@@ -162,6 +163,7 @@ class ReducedWindowedDStream[K: ClassManifest, V: ClassManifest](
     }
 
     val mergedValuesRDD = cogroupedRDD.asInstanceOf[RDD[(K,Seq[Seq[V]])]].mapValues(mergeValues)
+    mergedValuesRDD.setContextOrigin(origin)
 
     if (filterFunc.isDefined) {
       Some(mergedValuesRDD.filter(filterFunc.get))
